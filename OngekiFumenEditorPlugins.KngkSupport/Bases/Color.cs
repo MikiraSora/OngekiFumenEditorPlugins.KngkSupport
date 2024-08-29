@@ -7,19 +7,32 @@ public partial class Color : ObservableObject
 {
     [property: JsonPropertyName(nameof(a))]
     [ObservableProperty]
-    private float a;
+    private double a;
 
     [property: JsonPropertyName(nameof(b))]
     [ObservableProperty]
-    private float b;
+    private double b;
 
     [property: JsonPropertyName(nameof(g))]
     [ObservableProperty]
-    private float g;
+    private double g;
 
     [property: JsonPropertyName(nameof(r))]
     [ObservableProperty]
-    private float r;
+    private double r;
+
+    public Color()
+    {
+
+    }
+
+    public Color(System.Windows.Media.Color colorIdColor)
+    {
+        R = colorIdColor.R / 255f;
+        G = colorIdColor.G / 255f;
+        B = colorIdColor.B / 255f;
+        A = colorIdColor.A / 255f;
+    }
 
     public override string ToString()
     {

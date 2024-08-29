@@ -23,11 +23,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Kernels\"/>
+        <Folder Include="Kernels\" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="xcopy &quot;$(ProjectDir)$(OutDir)&quot; &quot;$(SolutionDir)refHost\OngekiFumenEditor\OngekiFumenEditor\bin\$(ConfigurationName)\net7.0-windows\Plugins\$(ProjectName)\&quot; /e /s /y"/>
+        <Exec Command="xcopy &quot;$(ProjectDir)$(OutDir)&quot; &quot;$(SolutionDir)refHost\OngekiFumenEditor\OngekiFumenEditor\bin\$(ConfigurationName)\net7.0-windows\Plugins\$(ProjectName)\&quot; /e /s /y" />
     </Target>
 
 </Project>
