@@ -2,17 +2,13 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net7.0-windows</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\OngekiFumenEditorPlugins.KngkSupport\OngekiFumenEditorPlugins.KngkSupport.csproj" />
       <ProjectReference Include="..\refHost\OngekiFumenEditor\OngekiFumenEditor\OngekiFumenEditor.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Caliburn.Micro" Version="4.0.212" />
     </ItemGroup>
 
 </Project>
