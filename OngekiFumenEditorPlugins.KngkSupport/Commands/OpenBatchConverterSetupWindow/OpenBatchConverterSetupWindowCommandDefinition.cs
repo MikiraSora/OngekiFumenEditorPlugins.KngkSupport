@@ -5,17 +5,17 @@ using Gemini.Framework.Commands;
 namespace OngekiFumenEditorPlugins.KngkSupport.Commands.FastOpenFumen;
 
 [CommandDefinition]
-public class FastOpenFumenCommandDefinition : CommandDefinition
+public class OpenBatchConverterSetupWindowCommandDefinition : CommandDefinition
 {
-    public const string CommandName = "KangekiFumen.FastOpenFumen";
+    public const string CommandName = "KangekiFumen.OpenBatchConverterSetupWindow";
 
     [Export]
     public static CommandKeyboardShortcut KeyGesture =
-        new CommandKeyboardShortcut<FastOpenFumenCommandDefinition>(new KeyGesture(Key.K, ModifierKeys.Control));
+        new CommandKeyboardShortcut<OpenBatchConverterSetupWindowCommandDefinition>(new KeyGesture(Key.K, ModifierKeys.Control));
 
     public override string Name => CommandName;
 
-    public override string Text => "快速打开Kangeki谱面文件";
+    public override string Text => "批量转换Ongeki->Kangeki谱面";
 
     public override string ToolTip => Text;
 }

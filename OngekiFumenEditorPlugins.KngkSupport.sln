@@ -31,6 +31,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Caliburn.Micro.Platform.Cor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Caliburn.Micro.Platform", "refHost\OngekiFumenEditor\Dependences\gemini\Dependences\Caliburn.Micro\src\Caliburn.Micro.Platform\Caliburn.Micro.Platform.csproj", "{F099783C-3B94-4604-B2A7-E92E0178289B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{25A015AE-E2CA-462F-BFDC-2ECBC8920FC2}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

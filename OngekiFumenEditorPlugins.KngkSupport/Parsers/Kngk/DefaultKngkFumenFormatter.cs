@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Mono.Cecil.Cil;
 using OngekiFumenEditor.Base;
 using OngekiFumenEditor.Base.OngekiObjects;
 using OngekiFumenEditor.Base.OngekiObjects.BulletPalleteEnums;
@@ -30,7 +31,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
     };
 
     public string FileFormatName => "Kangeki Fumen File";
-    public string[] SupportFumenFileExtensions => new[] {".kngk"};
+    public string[] SupportFumenFileExtensions => new[] { ".kngk" };
 
     public async Task<byte[]> SerializeAsync(OngekiFumen fumen)
     {
@@ -62,6 +63,8 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
         ConvertFlicks(ongekiFumen, kangekiFumen);
         ConvertCompositions(ongekiFumen, kangekiFumen);
 
+        kangekiFumen.BarDurations.AddRange(Enumerable.Repeat(192, 300));
+
         return kangekiFumen;
     }
 
@@ -77,7 +80,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
             var evt = new Event();
             evt.EventType = EventType.Bpm;
             evt.Z = bpmChange.TGrid.ToKngkZ();
-            evt.Value = (int) bpmChange.BPM;
+            evt.Value = (int)bpmChange.BPM;
 
             eventList.Add(evt);
         }
@@ -109,7 +112,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
             var evt = new Event();
             evt.EventType = EventType.Soflan;
             var weight = firstBpm / currentBpm;
-            var fixedSpeed = (int) (weight * currentSpeed * 100);
+            var fixedSpeed = (int)(weight * currentSpeed * 100);
             evt.Value = fixedSpeed;
             var z = tGrid.ToKngkZ();
 
@@ -284,7 +287,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
 
             if (ogkrBell.ReferenceBulletPallete is BulletPallete bulletPallete)
             {
-                kngkBell.Speed = (int) (bulletPallete.Speed * 100);
+                kngkBell.Speed = (int)(bulletPallete.Speed * 100);
                 kngkBell.UpperX = bulletPallete.PlaceOffset;
 
                 if (bulletPallete.TargetValue == Target.Player)
@@ -312,7 +315,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
         {
             int topX = default;
             if (ogkrLaser.ObliqueSourceXGridOffset != null)
-                topX = (int) ((ogkrLaser.ObliqueSourceXGridOffset.TotalUnit + ogkrLaser.XGrid.TotalUnit) * 4);
+                topX = (int)((ogkrLaser.ObliqueSourceXGridOffset.TotalUnit + ogkrLaser.XGrid.TotalUnit) * 4);
 
             foreach (var connectable in ogkrLaser.Children.AsEnumerable<ConnectableObjectBase>().Prepend(ogkrLaser))
             {
@@ -321,7 +324,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
                 laserNode.Z = connectable.TGrid.ToKngkZ();
                 laserNode.X = connectable.XGrid.ToKngkX();
                 laserNode.Y = 1;
-                laserNode.Size = (int) (ogkrLaser.WidthId * 3.0f / 2) * 4;
+                laserNode.Size = (int)(ogkrLaser.WidthId * 3.0f / 2) * 4;
                 laserNode.Curve = 1;
                 laserNode.Level = 1;
 
@@ -340,7 +343,6 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
     private void ConvertBullets(OngekiFumen ongekiFumen, KngkFumen kangekiFumen)
     {
         Log.LogDebug("begin.");
-        Log.LogDebug("begin.");
 
         var bulletList = new List<Item>();
 
@@ -358,7 +360,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
             if (ogkrBullet.ReferenceBulletPallete is not BulletPallete bulletPallete)
                 continue;
 
-            kngkBullet.Speed = (int) (bulletPallete.Speed * 100);
+            kngkBullet.Speed = (int)(bulletPallete.Speed * 100);
             kngkBullet.ItemType = bulletPallete.TypeValue switch
             {
                 BulletType.Circle => ItemType.TapiocaDonut,
@@ -373,7 +375,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
             };
 
             if (bulletPallete.PlaceOffset != 0)
-                kngkBullet.UpperX = (int) ((ogkrBullet.XGrid.TotalUnit + bulletPallete.PlaceOffset) * 4);
+                kngkBullet.UpperX = (int)((ogkrBullet.XGrid.TotalUnit + bulletPallete.PlaceOffset) * 4);
 
             if (bulletPallete.TargetValue == Target.Player)
                 kngkBullet.Horming = 192;
@@ -456,20 +458,20 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
         CheckAndAddTailPoints(wallRightPoints, 96);
         kangekiFumen.Right = new ObservableCollection<Point>(wallRightPoints);
 
+        var avaliableColorfulLaneIds = Enumerable.Range(0, 9).ToList();
+
         //first deal with note lanes, the remaining note lanes can be used as colorful lanes
-        ProcessNoteLanes(ongekiFumen, kangekiFumen, laneIdxMap, LaneType.Left, out var avaliableLeftLanes);
-        ProcessNoteLanes(ongekiFumen, kangekiFumen, laneIdxMap, LaneType.Center, out var avaliableCenterLanes);
-        ProcessNoteLanes(ongekiFumen, kangekiFumen, laneIdxMap, LaneType.Right, out var avaliableRightLanes);
+        ProcessNoteLanes(ongekiFumen, kangekiFumen, laneIdxMap, avaliableColorfulLaneIds, LaneType.Left, out var avaliableLeftLanes);
+        ProcessNoteLanes(ongekiFumen, kangekiFumen, laneIdxMap, avaliableColorfulLaneIds, LaneType.Center, out var avaliableCenterLanes);
+        ProcessNoteLanes(ongekiFumen, kangekiFumen, laneIdxMap, avaliableColorfulLaneIds, LaneType.Right, out var avaliableRightLanes);
 
         //for colorful lane
-        var avaliableLaneIds = avaliableRightLanes.Concat(avaliableCenterLanes).Concat(avaliableLeftLanes).ToList();
-        var avaliableColorfulLaneIds = Enumerable.Range(0, 9).ToList();
         foreach (var group in ongekiFumen.Lanes.OfType<ColorfulLaneStart>().GroupBy(x => x.ColorId))
         {
             var starts = group.ToList();
             var colorId = group.Key;
 
-            ProcessColofulLanes(starts, kangekiFumen, avaliableLaneIds, avaliableColorfulLaneIds,
+            ProcessColofulLanes(starts, kangekiFumen, avaliableColorfulLaneIds,
                 new Color(colorId.Color));
         }
 
@@ -477,7 +479,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
     }
 
     private void ProcessNoteLanes(OngekiFumen ongekiFumen, KngkFumen kangekiFumen, Dictionary<int, int> laneIdxMap,
-        LaneType type,
+List<int> avaliableColorfulLaneIds, LaneType type,
         out List<int> avaliableNoteLanes)
     {
         var list = avaliableNoteLanes = Enumerable.Range(0, 8).Select(x => 3 * x + type switch
@@ -532,7 +534,14 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
             return true;
         }
 
-        var starts = ongekiFumen.Lanes.Where(x => x.LaneType == type).OrderBy(x => x.TGrid).ToArray();
+        var dockedLaneRecordIds = ongekiFumen.GetAllDisplayableObjects()
+            .AsParallel()
+            .OfType<ILaneDockable>()
+            .Select(x => x.ReferenceLaneStart?.RecordId)
+            .OfType<int>()
+            .ToHashSet();
+
+        var starts = ongekiFumen.Lanes.Where(x => x.LaneType == type && dockedLaneRecordIds.Contains(x.RecordId)).OrderBy(x => x.TGrid).ToArray();
 
         foreach (var start in starts)
         {
@@ -542,7 +551,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
                 return;
             }
 
-            Log.LogDebug($"begin convert lane:{start} at laneIdx:{laneUsageState.KngkLaneIdx}");
+            //Log.LogDebug($"begin convert lane:{start} at laneIdx:{laneUsageState.KngkLaneIdx}");
             foreach (var connectable in start.Children.AsEnumerable<ConnectableObjectBase>().Prepend(start))
             {
                 var point = new Point();
@@ -557,12 +566,25 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
                 point.Guard = false;
 
                 laneUsageState.Points.Add(point);
-                Log.LogDebug($"    convert {connectable}  ->  {point}");
+                //Log.LogDebug($"    convert {connectable}  ->  {point}");
             }
 
             //commit tGrid for next pickup
             laneIdxMap[start.RecordId] = laneUsageState.KngkLaneIdx + 1;
             laneUsageState.CurrentCommitedTGrid = start.MaxTGrid;
+        }
+
+        var nonDockedStarts = ongekiFumen.Lanes.Where(x => x.LaneType == type && !dockedLaneRecordIds.Contains(x.RecordId)).OrderBy(x => x.TGrid).ToArray();
+        if (nonDockedStarts.Any())
+        {
+            var pickColorfulLaneIdx = avaliableColorfulLaneIds[0];
+            avaliableColorfulLaneIds.RemoveAt(0);
+            ProcessColofulLanes(nonDockedStarts, kangekiFumen, new() { pickColorfulLaneIdx }, new(type switch
+            {
+                LaneType.Left => ColorIdConst.LaneRed.Color,
+                LaneType.Center => ColorIdConst.LaneGreen.Color,
+                LaneType.Right => ColorIdConst.LaneBlue.Color
+            }));
         }
 
         foreach (var kngkLaneIdx in avaliableNoteLanes)
@@ -627,70 +649,18 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
     }
 
     private void ProcessColofulLanes(IEnumerable<ConnectableStartObject> starts, KngkFumen kangekiFumen,
-        List<int> avaliableLaneIds,
         List<int> avaliableColorfulLaneIds, Color color)
     {
-        var laneStates = new HashSet<LaneUsageState>();
-
-        // laneIdx reference noteLane index if is nagetive number,otherwise colorfulLane index
-        bool TryUseNewAvaliableLane(out int laneIdx)
+        if (avaliableColorfulLaneIds.Count == 0)
         {
-            laneIdx = -1;
-
-            if (avaliableColorfulLaneIds.Count > 0)
-            {
-                laneIdx = avaliableColorfulLaneIds[0];
-                avaliableColorfulLaneIds.RemoveAt(0);
-                return true;
-            }
-
-            if (avaliableLaneIds.Count > 0)
-            {
-                laneIdx = -(avaliableLaneIds[0] + 1);
-                avaliableLaneIds.RemoveAt(0);
-                return true;
-            }
-
-            return false;
+            Log.LogError($"Can't alloc a laneIdx for color {color}");
+            return;
         }
-
-        bool TryGetCommitableLaneState(TGrid laneStartTGrid, out LaneUsageState laneUsageState)
-        {
-            if (laneStates.FirstOrDefault(x => x.CurrentCommitedTGrid <= laneStartTGrid) is not LaneUsageState state)
-            {
-                //need require new lane
-                if (!TryUseNewAvaliableLane(out var newIdx))
-                {
-                    //dump infos.
-                    Log.LogError($"No more avaliable colorful({color}) lane to put converted points:");
-                    Log.LogError($"    laneStartTGrid: {laneStartTGrid}");
-                    foreach (var s in laneStates)
-                        Log.LogError(
-                            $"    state laneIdx: {s.KngkLaneIdx}, generated points: {s.Points.Count}, commited TGrid: {s.CurrentCommitedTGrid}");
-                    laneUsageState = default;
-                    return false;
-                }
-
-                state = new LaneUsageState
-                {
-                    KngkLaneIdx = newIdx
-                };
-                laneStates.Add(state);
-            }
-
-            laneUsageState = state;
-            return true;
-        }
+        var points = new List<Point>();
 
         foreach (var start in starts)
         {
-            if (!TryGetCommitableLaneState(start.TGrid, out var laneUsageState))
-            {
-                Log.LogError("Convert ogkr colorful lane to kngk art lane failed.");
-                return;
-            }
-
-            Log.LogDebug($"begin convert lane:{start} at laneIdx:{laneUsageState.KngkLaneIdx}");
+            //Log.LogDebug($"begin convert lane:{start} at laneIdx:{laneUsageState.KngkLaneIdx}");
             foreach (var connectable in start.Children.AsEnumerable<ConnectableObjectBase>().Prepend(start))
             {
                 var point = new Point();
@@ -704,44 +674,26 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
                 point.RelativeX = 0;
                 point.Guard = false;
 
-                laneUsageState.Points.Add(point);
-                Log.LogDebug($"    convert {connectable}  ->  {point}");
+                points.Add(point);
+                //Log.LogDebug($"    convert {connectable}  ->  {point}");
             }
-
-            //commit tGrid for next pickup
-            laneUsageState.CurrentCommitedTGrid = start.MaxTGrid;
         }
 
-        foreach (var state in laneStates)
+        var idx = avaliableColorfulLaneIds[0];
+        avaliableColorfulLaneIds.RemoveAt(0);
+
+        kangekiFumen.ArtLanes[idx] = new Lane
         {
-            var idx = state.KngkLaneIdx;
-            var points = state.Points;
-
-            if (idx < 0)
-            {
-                var fixIdx = -idx - 1;
-                kangekiFumen.Lanes[fixIdx] = new Lane
-                {
-                    Points = points
-                };
-                kangekiFumen.LaneColors[fixIdx] = color;
-            }
-            else
-            {
-                kangekiFumen.ArtLanes[idx] = new Lane
-                {
-                    Points = points
-                };
-                kangekiFumen.ArtColors[idx] = color;
-            }
-        }
+            Points = new(points)
+        };
+        kangekiFumen.ArtColors[idx] = color;
     }
 
     private void CheckAndAddTailPoints(IList<Point> points, int outsizeX)
     {
         if (points.LastOrDefault()?.Z < 57791)
         {
-            Log.LogDebug($"append limit points, outsizeX: {outsizeX}");
+            //Log.LogDebug($"append limit points, outsizeX: {outsizeX}");
             points.Add(new Point
             {
                 Curve = 1,
@@ -767,13 +719,13 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
         {
             var startZ = lbk.TGrid.ToKngkTGrid().TotalGrid;
             var endZ = lbk.EndIndicator.TGrid.ToKngkTGrid().TotalGrid;
-            Log.LogDebug($"lbk zRange: [{startZ},{endZ}]");
+            //Log.LogDebug($"lbk zRange: [{startZ},{endZ}]");
 
             //make affected point.Gurad = true
             foreach (var point in wallLeftPoints.Where(x => x.Z >= startZ && x.Z < endZ))
             {
                 point.Guard = point.Line;
-                Log.LogDebug($"    affected point: {point}");
+                //Log.LogDebug($"    affected point: {point}");
             }
 
             void interpolate(int insertZ, bool isTail)
@@ -792,7 +744,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
 
                             var point = new Point();
 
-                            point.X = (int) insertX;
+                            point.X = (int)insertX;
                             point.Z = insertZ;
                             point.Line = curPoint.Line;
                             point.Guard = point.Line && !isTail;
@@ -802,7 +754,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
                             point.RelativeX = 0;
 
                             wallLeftPoints.Insert(idx + 1, point);
-                            Log.LogDebug($"    interpolate new insertZ {insertZ} idx {idx} point: {point}");
+                            //Log.LogDebug($"    interpolate new insertZ {insertZ} idx {idx} point: {point}");
                         }
                 }
             }
@@ -818,7 +770,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
 
         foreach (var start in lanes.OrderBy(x => x.TGrid))
         {
-            Log.LogDebug($"begin convert lane:{start}");
+            //Log.LogDebug($"begin convert lane:{start}");
             foreach (var connectable in start.Children.AsEnumerable<ConnectableObjectBase>().Prepend(start))
             {
                 var point = new Point();
@@ -833,7 +785,7 @@ public partial class DefaultKngkFumenFormatter : IFumenSerializable
                 point.Guard = false; //append guard point after them.
 
                 list.Add(point);
-                Log.LogDebug($"    convert {connectable}  ->  {point}");
+                //Log.LogDebug($"    convert {connectable}  ->  {point}");
             }
         }
 
